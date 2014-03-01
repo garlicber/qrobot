@@ -20,6 +20,7 @@ class Robot:
         self.last_actions = []
 
     def next_loc(self):
+        self.last_fields = self.last_fields[-5:]
         possible_locs = [loc for loc in self.around.free_locs if loc not in self.last_fields]
         if not possible_locs:
             possible_locs = self.around.locs
@@ -29,7 +30,7 @@ class Robot:
         return loc
 
     def next_action(self, game):
-        if self.hp + 15 < 15*len(self.around.opponents):
+        if self.hp < 15*len(self.around.opponents):
             return ['suicide']
 
         if len(self.around.opponents) > 1:
