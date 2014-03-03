@@ -36,7 +36,7 @@ class TestState(unittest.TestCase):
         g.run_turn()
         robot1 = g._player1._robot
         print(dir(robot1))
-        state = q.State.from_game(robot1, g._state)
+        state = q.State.from_game(robot1)
 
 if __name__ == '__main__':
     unittest.main()

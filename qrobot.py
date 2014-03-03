@@ -53,7 +53,8 @@ class State:
         return State(0, fields)
 
     @staticmethod
-    def from_game(robot, game):
+    def from_game(robot):
+        game = robot.game
         (loc_x, loc_y) = robot.location
         state = State.empty_state()
         for (fx, fy), field in state.fields.items():
@@ -80,20 +81,50 @@ class State:
 
 
 class QTable:
-    def __init__(self):
-        self.states = self._generate_all_states()
-        self.actions = self._actions()
-        self.Q = {}
+    DEFAULT_REWARD = 0
+    q = {}
 
-    def _actions(self):
-        return [["suicide"]]
+    def __init__(self):
+        self.actions = self._actions()
+
+    def getQ(self, state, action):
+        if (state, action) in self.q:
+            return self.q[(state, action)]
+        else:
+            return self.DEFAULT_REWARD
+
+
+
+    @staticmethod
+    def _actions():
+        actions = [["suicide"]]
+        for x in [-1, 1]:
+            for y in [-1, 1]:
+                actions.append(["move", (x, y)])
+                actions.append(["attack", (x, y)])
+        return actions
 
     def predict(self, robot):
-        state = State.formGame(robot)
-        action = max([self.Q[(state, a)] for a in self.actions])
+        state = State.from_game(robot)
+        action = max([self.getQ(state, a) for a in self.actions])
         return action
 
+    def learn(self, robot):
+        return
+
+
 class Robot:
+    game = None
+    qlearning = QTable()
+    last_actions = {}
+
     def act(self, game):
+        if self.robot_id not in self.last_actions:
+            self.last_actions[self.robot_id] = []
+
         self.game = game
+      #  action = self.qlearning.predict(self)
+      #  self.last_actions[self.robot_id].append(action)
+      #  self.qlearning.learn()
+      #  return action
         return ["guard"]
