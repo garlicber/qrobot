@@ -91,12 +91,17 @@ class State:
                 print ""
 
 
-class QTable:
+class QLearning:
     DEFAULT_REWARD = 0
     q = {}
 
-    def __init__(self):
+    _alpha = 0
+    _gamma = 0
+
+    def __init__(self, alpha=0.1, gamma=0.5):
         self.actions = self._actions()
+        self._alpha = alpha
+        self._gamma = gamma
 
     def getQ(self, state, action):
         if (state, action) in self.q:
@@ -120,8 +125,12 @@ class QTable:
         action = max(self.actions, key=lambda a: self.getQ(state, a))
         return action
 
-    def learn(self, state, action, new_state):
-        return
+    def learn(self, old_state, action, new_state):
+        reward = self.reward(old_state, action, new_state)
+        old_q = self.getQ(old_state, action)
+        optimal_future_value = max([getQ(new_state, a) for a in self.actions])
+        q = old_q + self.alpha * (reward + self.gamma * optimal_future_value - old_q)
+        self.setQ(old_state, action, q)
 
     @staticmethod
     def map_action(action, loc):
@@ -142,7 +151,7 @@ class Robot:
     game = None
     last_game = None
 
-    qlearning = QTable()
+    qlearning = QLearning()
     last_action = {}
     last_state = {}
 
@@ -159,4 +168,4 @@ class Robot:
         self.last_state[self.robot_id] = state
         self.last_action[self.robot_id] = action
         self.last_game = game
-        return QTable.map_action(action, self.location)
+        return QLearning.map_action(action, self.location)
