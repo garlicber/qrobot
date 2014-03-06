@@ -3,8 +3,14 @@ import rg
 
 class Robot:
 
+    def __init__(self):
+        self.counter = 0
+
     def act(self, game):
         close_enemy = self.enemy_close(game)
+        self.counter += 1
+        print(self.counter)
+
         if self.suicide_reason():
             return ['suicide']
 
@@ -29,7 +35,6 @@ class Robot:
     def add_to_defense(self):
         rg.toward(self.location, rg.CENTER_POINT)
 
-
     def robot_on_position(self, game, loc):
         for x, robot in game.robots.iteritems():
             if robot.location == loc:
@@ -42,5 +47,5 @@ class Robot:
     def suicide_reason(self):
         if self.hp <= 10:
             return True
-        else :
+        else:
             return False

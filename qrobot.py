@@ -16,6 +16,10 @@ ACTION_SUICIDE = 1
 ACTION_MOVE = 1
 ACTION_ATTACK = 1
 
+REWARD_UNIT = 1
+
+MOVE_DIRECTIONS = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
 def hp2discrete(hp):
     if 50 > hp > 40:
         return HP_HIGH
@@ -25,7 +29,7 @@ def hp2discrete(hp):
         return HP_LOW
 
 class Field:
-    def __init__(self, player_id=0, hp=0, tpe=FIELD_NORMAL):
+    def __init__(self, player_id=0, hp=0, type=FIELD_NORMAL):
         self.player_id = player_id
         self.hp = 0
         self.type = type
@@ -115,10 +119,9 @@ class QLearning:
     @staticmethod
     def _actions():
         actions = [ACTION_SUICIDE]
-        for x in [-1, 1]:
-            for y in [-1, 1]:
-                actions.append((ACTION_ATTACK, (x, y)))
-                actions.append((ACTION_MOVE, (x, y)))
+        for cords in MOVE_DIRECTIONS:
+                actions.append((ACTION_ATTACK, cords))
+                actions.append((ACTION_MOVE, cords))
         return actions
 
     def predict(self, state):
@@ -147,6 +150,26 @@ class QLearning:
 
         return "error"
 
+    def reward(robot, state, action):
+        damage_dealt = 0
+        damage_taken = 0
+
+        if action[0] == ACTION_ATTACK:
+            attack_cord = action[1]
+            if state.fields(attack_cord).type == FIELD_ENEMY:
+                damage_dealt += 9
+
+        damage_taken = robot.lasthp - robot.hp
+
+        # If suiccide makes more damage then the lifepoint lost then its a good choice
+
+        if action[0] == ACTION_SUICIDE:
+            for
+           robot.loc
+
+        return ( damage_dealt - damage_taken) * REWARD_UNIT
+
+
 class Robot:
     game = None
     last_game = None
@@ -154,6 +177,9 @@ class Robot:
     qlearning = QLearning()
     last_action = {}
     last_state = {}
+
+    def __init__(self):
+        self.last_hp = 50
 
     def act(self, game):
         self.game = game
@@ -168,4 +194,16 @@ class Robot:
         self.last_state[self.robot_id] = state
         self.last_action[self.robot_id] = action
         self.last_game = game
+        self.last_hp =  self.hp
         return QLearning.map_action(action, self.location)
+
+    def count_enemys_in_range(self):
+        count = 0
+        for dir in MOVE_DIRECTIONS:
+            attack_location = map(sum,zip(dir,self.location))
+            if attack_location in self.game.robots and hasattr(game.robots.[cords], 'robot_id'):
+                count +=1
+        return count
+
+
+
