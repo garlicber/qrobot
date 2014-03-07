@@ -91,7 +91,7 @@ class DrawObject:
         elif self.type == BLOCKED:
             output = "[B]"
         elif self.type == "path":
-            output ==[+]
+            output == "[+]"
         return output
 
 class QLearning:
