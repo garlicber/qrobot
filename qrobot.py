@@ -1,4 +1,5 @@
 import rgkit.rg as rg
+from rgkit.run import Runner
 
 SIGHT = 3
 HP_LOW = 1
@@ -208,6 +209,18 @@ class Robot:
         count = 0
         for dir in MOVE_DIRECTIONS:
             attack_location = map(sum, zip(dir, self.location))
-            if attack_location in self.game.robots and hasattr(self.game.robots[attack_location], 'robot_id'):
+            if attack_location in self.game.robots and \
+                    hasattr(self.game.robots[attack_location], 'robot_id'):
                 count += 1
         return count
+
+    def delta_callback(self, detla):
+        print "delta_callback"
+        return
+
+if __name__ == "__main__":
+    training_robot = Robot()
+    robot2 = Robot()
+    runner = Runner.from_robots(training_robot, robot2,
+                                delta_callback=training_robot.delta_callback)
+    runner.run()
