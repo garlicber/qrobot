@@ -170,9 +170,26 @@ class QLearning:
 
         damage_taken = delta_me.hp - delta_me.hp_end
 
-        # If suiccide makes more damage then the lifepoint lost then its a good choice
+        # If suiccide makes more damage then the lifepoint lost then its a good
+        # choice
 
         return (damage_dealt - damage_taken) * REWARD_UNIT
+
+    def __eq__(self, other):
+        return (self.q == other.q and
+                self._alpha == other._alpha and
+                self._gamma == other._gamma)
+
+    def save(self, file_name="q.pickle"):
+        import pickle
+        with open(file_name, "w") as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load(file_name="q.pickle"):
+        import pickle
+        with open(file_name, "r") as f:
+            return pickle.load(f)
 
 
 class Robot:
@@ -233,7 +250,6 @@ class Robot:
                 if delta_me['loc'] == loc:
                     future_state = State.from_game(delta_me.loc_end, delta_me.hp_end, future_game)
                     self.qlearning.learn(delta_me, delta, self.state, future_state, action)
-        return
 
 if __name__ == "__main__":
     training_robot = Robot()
