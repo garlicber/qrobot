@@ -77,16 +77,15 @@ class State:
         return State(0, fields)
 
     @staticmethod
-    def from_game(robot):
-        game = robot.game
-        (loc_x, loc_y) = robot.location
+    def from_game(robot_location, robot_hp, game):
+        (loc_x, loc_y) = robot_location
         state = State.empty_state()
         for (fx, fy), field in state.fields.items():
             robot_loc = (loc_x + fx, loc_y + fy)
             if robot_loc in game.robots:
                 state.fields[(fx, fy)].set_robot(game.robots[robot_loc])
             state.fields[(fx, fy)].set_location_type(robot_loc)
-        state.hp = robot.hp
+        state.hp = robot_hp
         return state
 
     def __str__(self):
@@ -137,12 +136,12 @@ class QLearning:
         action = max(self.actions, key=lambda a: self.get_q(state, a))
         return action
 
-    def learn(self, old_state, action, new_state):
-        reward = self.reward(self, new_state, action)
-        old_q = self.get_q(old_state, action)
+    def learn(self, delta_me, delta, state, new_state, action):
+        reward = self.reward(delta_me, delta, action)
+        old_q = self.get_q(state, action)
         optimal_future_value = max([self.get_q(new_state, a) for a in self.actions])
         q = old_q + self.alpha * (reward + self.gamma * optimal_future_value - old_q)
-        self.set_q(old_state, action, q)
+        self.set_q(state, action, q)
 
     @staticmethod
     def map_action(action, loc):
@@ -159,16 +158,17 @@ class QLearning:
 
         return "error"
 
-    def reward(self, robot, state, action):
+    def reward(self, delta_me, delta, action):
         damage_dealt = 0
         damage_taken = 0
 
         if action[0] == ACTION_ATTACK:
-            attack_cord = action[1]
-            if state.fields(attack_cord).type == FIELD_ENEMY:
-                damage_dealt += 9
+            attack_loc = action[1]
+            for dict in delta:
+                if dict["loc_end"] == attack_loc and delta_me["player_id"] != delta["player_id"]:
+                    damage_dealt += 9
 
-        damage_taken = robot.lasthp - robot.hp
+        damage_taken = delta_me.hp - delta_me.hp_end
 
         # If suiccide makes more damage then the lifepoint lost then its a good choice
 
@@ -190,7 +190,7 @@ class Robot:
     def act(self, game):
         new_robot = self.robot_id not in self.last
 
-        self.state = State.from_game(game)
+        self.state = State.from_game(self.location, self.hp, game)
         self.action = self.qlearning.predict(self.state)
         self.game = game
 
@@ -199,7 +199,7 @@ class Robot:
                                  self.last.action[self.robot_id],
                                  self.state)
 
-        self.last[self.robot_id]['state']= self.state
+        self.last[self.robot_id]['state'] = self.state
         self.last[self.robot_id]['action'] = self.action
         self.last[self.robot_id]['game'] = game
         self.last[self.robot_id]['hp'] = self.hp
@@ -215,8 +215,24 @@ class Robot:
                 count += 1
         return count
 
-    def delta_callback(self, detla):
-        print "delta_callback"
+    # delta = [AttrDict{
+    #    'loc': loc,
+    #    'hp': hp,
+    #    'player_id': player_id,
+    #    'loc_end': loc_end,
+    #    'hp_end': hp_end
+    # }]
+    # returns new GameState
+
+    def delta_callback(self, delta, new_gamestate):
+        future_game = new_gamestate.get_game_info(self.player_id)
+        for (loc, robot) in self.game.robots:
+            action = self.last[robot.robot_id]['action']
+
+            for delta_me in delta:
+                if delta_me['loc'] == loc:
+                    future_state = State.from_game(delta_me.loc_end, delta_me.hp_end, future_game)
+                    self.qlearning.learn(delta_me, delta, self.state, future_state, action)
         return
 
 if __name__ == "__main__":
