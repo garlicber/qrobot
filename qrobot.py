@@ -215,7 +215,7 @@ class Robot:
         self.game = game
 
         if not new_robot:
-            self.qlearning.learn(self.last.state[self.robot_id],
+            self.qlearning.learn(self.last[self.ro].state[self.robot_id],
                                  self.last.action[self.robot_id],
                                  self.state)
 
@@ -258,9 +258,12 @@ class Robot:
                                          future_state, action)
 
 
-if __name__ == "__main__":
+def main():
     training_robot = Robot()
     robot2 = Robot()
     runner = Runner.from_robots(training_robot, robot2,
                                 delta_callback=training_robot.delta_callback)
     runner.run()
+
+if __name__ == "__main__":
+    main()
