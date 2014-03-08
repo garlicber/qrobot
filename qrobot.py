@@ -1,3 +1,4 @@
+import random
 import rgkit.rg as rg
 from rgkit.run import Runner
 import _collections
@@ -211,18 +212,13 @@ class Robot:
         new_robot = self.robot_id not in self.last
 
         self.state = State.from_game(self.location, self.hp, game)
-        self.action = self.qlearning.predict(self.state)
         self.game = game
 
-        if not new_robot:
-            self.qlearning.learn(self.last[self.ro].state[self.robot_id],
-                                 self.last.action[self.robot_id],
-                                 self.state)
-
-        self.last[self.robot_id]['state'] = self.state
-        self.last[self.robot_id]['action'] = self.action
-        self.last[self.robot_id]['game'] = game
-        self.last[self.robot_id]['hp'] = self.hp
+        # Explore
+        if random.randomint(0, 3) < 1:
+            self.action = self.get_random_action()
+        else:
+            self.action = self.qlearning.predict(self.state)
 
         return QLearning.map_action(self.action, self.location)
 
@@ -234,6 +230,17 @@ class Robot:
                     hasattr(self.game.robots[attack_location], 'robot_id'):
                 count += 1
         return count
+
+    def get_possible_actions(self):
+        possible_moves = []
+        for move in MOVE_DIRECTIONS:
+            if self.state.fields(move).type != FIELD_OBSTACLE:
+                possible_moves.append(move)
+        return possible_moves
+
+    def get_random_action(self):
+        possible_action = self.get_possible_actions()
+        return possible_action[random.randint(0, len(possible_action))]
 
     # delta = [AttrDict{
     #    'loc': loc,
@@ -258,12 +265,9 @@ class Robot:
                                          future_state, action)
 
 
-def main():
+if __name__ == "__main__":
     training_robot = Robot()
     robot2 = Robot()
     runner = Runner.from_robots(training_robot, robot2,
                                 delta_callback=training_robot.delta_callback)
     runner.run()
-
-if __name__ == "__main__":
-    main()
