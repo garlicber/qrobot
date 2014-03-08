@@ -6,4 +6,4 @@ fi
 
 source .env/bin/activate
 
-pip install git+https://github.com/berleon/rgkit.git
+pip install -r requirements.txt
