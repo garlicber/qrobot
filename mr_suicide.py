@@ -2,7 +2,6 @@ import rg
 
 
 class Robot:
-
     def __init__(self):
         self.counter = 0
 
@@ -17,7 +16,8 @@ class Robot:
         if close_enemy != 'none':
             return ['attack', close_enemy]
 
-        if self.robot_on_position(game, self.add_to_defense()) != 'ally' and self.location != rg.CENTER_POINT:
+        if self.robot_on_position(game, self.add_to_defense()) != 'ally' \
+                and self.location != rg.CENTER_POINT:
             return ['move', rg.toward(self.location, rg.CENTER_POINT)]
         return ['guard']
 
@@ -29,7 +29,7 @@ class Robot:
         for loc, bot in game.robots.iteritems():
             if bot.player_id != self.player_id:
                 if rg.dist(loc, self.location) <= 1:
-                        return loc
+                    return loc
         return 'none'
 
     def add_to_defense(self):

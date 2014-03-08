@@ -6,6 +6,7 @@ from qrobot import QLearning
 
 
 class TestState(unittest.TestCase):
+    @unittest.skip
     def test_from_game(self):
         robot1 = q.Robot()
         robot2 = q.Robot()

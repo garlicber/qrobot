@@ -139,8 +139,10 @@ class QLearning:
     def learn(self, delta_me, delta, state, new_state, action):
         reward = self.reward(delta_me, delta, action)
         old_q = self.get_q(state, action)
-        optimal_future_value = max([self.get_q(new_state, a) for a in self.actions])
-        q = old_q + self.alpha * (reward + self.gamma * optimal_future_value - old_q)
+        optimal_future_value = max([self.get_q(new_state, a)
+                                    for a in self.actions])
+        q = old_q + self.alpha * \
+            (reward + self.gamma * optimal_future_value - old_q)
         self.set_q(state, action, q)
 
     @staticmethod
@@ -165,7 +167,8 @@ class QLearning:
         if action[0] == ACTION_ATTACK:
             attack_loc = action[1]
             for dict in delta:
-                if dict["loc_end"] == attack_loc and delta_me["player_id"] != delta["player_id"]:
+                if dict["loc_end"] == attack_loc and \
+                        delta_me["player_id"] != delta["player_id"]:
                     damage_dealt += 9
 
         damage_taken = delta_me.hp - delta_me.hp_end
@@ -248,8 +251,12 @@ class Robot:
 
             for delta_me in delta:
                 if delta_me['loc'] == loc:
-                    future_state = State.from_game(delta_me.loc_end, delta_me.hp_end, future_game)
-                    self.qlearning.learn(delta_me, delta, self.state, future_state, action)
+                    future_state = State.from_game(delta_me.loc_end,
+                                                   delta_me.hp_end,
+                                                   future_game)
+                    self.qlearning.learn(delta_me, delta, self.state,
+                                         future_state, action)
+
 
 if __name__ == "__main__":
     training_robot = Robot()
