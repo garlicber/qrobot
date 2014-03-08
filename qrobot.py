@@ -1,5 +1,6 @@
 import rgkit.rg as rg
 from rgkit.run import Runner
+import _collections
 
 SIGHT = 3
 HP_LOW = 1
@@ -177,7 +178,7 @@ class QLearning:
 class Robot:
     game = None
     last_game = None
-    last = {}
+    last = _collections.defaultdict(dict)
 
     qlearning = QLearning()
     last_action = {}
@@ -187,7 +188,7 @@ class Robot:
         self.last_hp = 50
 
     def act(self, game):
-        new_robot = self.robot_id not in self.last_action
+        new_robot = self.robot_id not in self.last
 
         self.state = State.from_game(game)
         self.action = self.qlearning.predict(self.state)
@@ -198,10 +199,10 @@ class Robot:
                                  self.last.action[self.robot_id],
                                  self.state)
 
-        self.last.state[self.robot_id] = self.state
-        self.last.action[self.robot_id] = self.action
-        self.last.game[self.robot_id] = game
-        self.last.hp[self.robot_id] = self.last_hp
+        self.last[self.robot_id]['state']= self.state
+        self.last[self.robot_id]['action'] = self.action
+        self.last[self.robot_id]['game'] = game
+        self.last[self.robot_id]['hp'] = self.hp
 
         return QLearning.map_action(self.action, self.location)
 
