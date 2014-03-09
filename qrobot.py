@@ -19,8 +19,6 @@ ACTION_SUICIDE = 1
 ACTION_MOVE = 1
 ACTION_ATTACK = 1
 
-REWARD_UNIT = 1
-
 MOVE_DIRECTIONS = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
 
@@ -103,6 +101,20 @@ class State:
                     print("[ ]"),
                 print("")
 
+    @staticmethod
+    def map_action(action, loc):
+        if action == ACTION_SUICIDE:
+            return ["suicide"]
+
+        (action_code, rel) = action
+        (abs_x, abs_y) = QLearning.map_location(loc, rel)
+        if action_code == ACTION_ATTACK:
+            return ["attack", (abs_x, abs_y)]
+        if action_code == ACTION_MOVE:
+            return ["move", (abs_x, abs_y)]
+
+        return "error"
+
 
 class QLearning:
     DEFAULT_REWARD = 0
@@ -137,47 +149,19 @@ class QLearning:
         action = max(self.actions, key=lambda a: self.get_q(state, a))
         return action
 
-    def learn(self, delta_me, delta, state, new_state, action):
-        reward = self.reward(delta_me, delta, action)
+    def learn(self, state, new_state, action, reward):
         old_q = self.get_q(state, action)
         optimal_future_value = max([self.get_q(new_state, a)
                                     for a in self.actions])
-        q = old_q + self.alpha * \
-            (reward + self.gamma * optimal_future_value - old_q)
+        q = old_q + self._alpha * \
+            (reward + self._gamma * optimal_future_value - old_q)
         self.set_q(state, action, q)
 
     @staticmethod
-    def map_action(action, loc):
-        if action == ACTION_SUICIDE:
-            return ["suicide"]
-
-        (action_code, (rel_x, rel_y)) = action
-        (loc_x, loc_y) = loc
-        (abs_x, abs_y) = (rel_x + loc_x, rel_y + loc_y)
-        if action_code == ACTION_ATTACK:
-            return ["attack", (abs_x, abs_y)]
-        if action_code == ACTION_MOVE:
-            return ["move", (abs_x, abs_y)]
-
-        return "error"
-
-    def reward(self, delta_me, delta, action):
-        damage_dealt = 0
-        damage_taken = 0
-
-        if action[0] == ACTION_ATTACK:
-            attack_loc = action[1]
-            for dict in delta:
-                if dict["loc_end"] == attack_loc and \
-                        delta_me["player_id"] != delta["player_id"]:
-                    damage_dealt += 9
-
-        damage_taken = delta_me.hp - delta_me.hp_end
-
-        # If suiccide makes more damage then the lifepoint lost then its a good
-        # choice
-
-        return (damage_dealt - damage_taken) * REWARD_UNIT
+    def map_location(absolute_loc, relative_loc):
+        (rel_x, rel_y) = relative_loc
+        (abs_x, abs_y) = absolute_loc
+        return rel_x + abs_x, rel_y + abs_y
 
     def __eq__(self, other):
         return (self.q == other.q and
@@ -199,43 +183,53 @@ class QLearning:
 class Robot:
     game = None
     last_game = None
-    last = _collections.defaultdict(dict)
+
+    current_state = None
+    last_states = {}
+    last_action = {}
 
     qlearning = QLearning()
-    last_action = {}
-    last_state = {}
+    delta = None
+
+    # Keep track of all our robot_ids. Will be useful to detect new robots.
+    robot_ids = set()
+
+    # default values - will get overridden by rgkit
+    location = (0, 0)
+    hp = 0
+    player_id = 0
+    robot_id = 0
 
     def __init__(self):
-        self.last_hp = 50
+        pass
 
     def act(self, game):
-        new_robot = self.robot_id not in self.last
+        new_robot = self.robot_id in self.robot_ids
+        self.robot_ids.add(self.robot_id)
 
-        self.state = State.from_game(self.location, self.hp, game)
+        self.current_state = State.from_game(self.location, self.hp, game)
         self.game = game
 
         # Explore
-        if random.randomint(0, 3) < 1:
-            self.action = self.get_random_action()
+        if random.randint(0, 3) < 1:
+            action = self.get_random_action()
         else:
-            self.action = self.qlearning.predict(self.state)
+            action = self.qlearning.predict(self.current_state)
 
-        return QLearning.map_action(self.action, self.location)
+        if not new_robot:
+            self.learn()
 
-    def count_enemys_in_range(self):
-        count = 0
-        for dir in MOVE_DIRECTIONS:
-            attack_location = map(sum, zip(dir, self.location))
-            if attack_location in self.game.robots and \
-                    hasattr(self.game.robots[attack_location], 'robot_id'):
-                count += 1
-        return count
+        self.last_states[self.robot_id] = self.current_state
+        self.last_action[self.robot_id] = action
+
+        return State.map_action(action, self.location)
 
     def get_possible_actions(self):
         possible_moves = []
         for move in MOVE_DIRECTIONS:
-            if self.state.fields(move).type != FIELD_OBSTACLE:
+            if self.current_state.fields[move].type != FIELD_OBSTACLE:
                 possible_moves.append(move)
+
         return possible_moves
 
     def get_random_action(self):
@@ -250,19 +244,19 @@ class Robot:
     #    'hp_end': hp_end
     # }]
     # returns new GameState
+    def learn(self):
+        my_delta = [d for d in self.delta if d.loc == self.location]
 
-    def delta_callback(self, delta, new_gamestate):
-        future_game = new_gamestate.get_game_info(self.player_id)
-        for (loc, robot) in self.game.robots:
-            action = self.last[robot.robot_id]['action']
+        damage_taken = my_delta.hp - my_delta.hp_end
+        reward = my_delta.damage_caused - damage_taken
 
-            for delta_me in delta:
-                if delta_me['loc'] == loc:
-                    future_state = State.from_game(delta_me.loc_end,
-                                                   delta_me.hp_end,
-                                                   future_game)
-                    self.qlearning.learn(delta_me, delta, self.state,
-                                         future_state, action)
+        last_state = self.last_states[self.robot_id]
+        action = self.last_action[self.robot_id]
+        future_state = self.current_state
+        self.qlearning.learn(last_state, future_state, action, reward)
+
+    def delta_callback(self, delta):
+        self.delta = delta
 
 
 if __name__ == "__main__":
