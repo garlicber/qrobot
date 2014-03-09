@@ -16,8 +16,8 @@ FIELD_ENEMY = 1 << 4
 FIELD_OBSTACLE = 1 << 5
 
 ACTION_SUICIDE = 1
-ACTION_MOVE = 1
-ACTION_ATTACK = 1
+ACTION_MOVE = 2
+ACTION_ATTACK = 3
 
 REWARD_UNIT = 1
 
@@ -33,12 +33,12 @@ def hp2discrete(hp):
         return HP_LOW
 
 
-def sum_tuple(a, b):
+def add_tuple(a, b):
     return map(sum, zip(a, b))
 
 
 class Field:
-    def __init__(self, player_id=0, hp=0, type=FIELD_NORMAL):
+    def __init__(self, player_id=0, hp=0, type = FIELD_NORMAL):
         self.player_id = player_id
         self.hp = 0
         self.type = type
@@ -55,12 +55,12 @@ class Field:
         loc_types = rg.loc_types(loc)
         if "invalid" in loc_types:
             self.type = FIELD_OBSTACLE
-        elif "normal" in loc_types:
-            self.type = FIELD_NORMAL
         elif "obstacle" in loc_types:
             self.type = FIELD_OBSTACLE
         elif "spawn" in loc_types:
             self.type = FIELD_SPAWN
+        elif "normal" in loc_types:
+            self.type = FIELD_NORMAL
 
 
 class State:
@@ -73,7 +73,7 @@ class State:
         fields = {}
         for x in range(-SIGHT, SIGHT + 1):
             for y in range(-SIGHT, SIGHT + 1):
-                if abs(x) + abs(y) <= SIGHT and (x != 0 and y != 0):
+                if abs(x) + abs(y) <= SIGHT and (x != 0 or y != 0):
                     fields[(x, y)] = Field(x, y)
         return State(0, fields)
 
@@ -90,19 +90,23 @@ class State:
         return state
 
     def __str__(self):
+        state_string = ""
         for x in range(-SIGHT, SIGHT + 1):
             for y in range(-SIGHT, SIGHT + 1):
-                field = self.fields[(x, y)]
-                if field.player_id == 'enemy':
-                    print("[E]"),
-                elif field.player_id == 'friend':
-                    print("[F]"),
-                elif field.type == 'spawn':
-                    print("[S]"),
-                elif field.type != 'blocked':
-                    print("[ ]"),
-                print("")
-
+                if abs(x) + abs(y) <= SIGHT and (x != 0 or y != 0):
+                    field = self.fields[(x, y)]
+                    if field.player_id == FIELD_ENEMY:
+                        state_string += "[E]"
+                    elif field.player_id == FIELD_FRIEND:
+                        state_string += "[F]"
+                    elif field.type == FIELD_SPAWN:
+                        state_string += "[S]"
+                    elif field.type != FIELD_OBSTACLE:
+                        state_string += "[ ]"
+                    else:
+                        state_string += "[B]"
+            state_string += "\n"
+        return  state_string
 
 class QLearning:
     DEFAULT_REWARD = 0
@@ -115,6 +119,10 @@ class QLearning:
         self.actions = self._actions()
         self._alpha = alpha
         self._gamma = gamma
+
+
+    def __sizeof__(self):
+        return len(self.q)
 
     def get_q(self, state, action):
         if (state, action) in self.q:
@@ -134,6 +142,7 @@ class QLearning:
         return actions
 
     def predict(self, state):
+        #print state
         action = max(self.actions, key=lambda a: self.get_q(state, a))
         return action
 
@@ -151,14 +160,12 @@ class QLearning:
         if action == ACTION_SUICIDE:
             return ["suicide"]
 
-        (action_code, (rel_x, rel_y)) = action
-        (loc_x, loc_y) = loc
-        (abs_x, abs_y) = (rel_x + loc_x, rel_y + loc_y)
-        if action_code == ACTION_ATTACK:
+        (abs_x, abs_y) = add_tuple(loc, action[1])
+        if action[0] == ACTION_ATTACK:
             return ["attack", (abs_x, abs_y)]
-        if action_code == ACTION_MOVE:
+        if action[0] == ACTION_MOVE:
             return ["move", (abs_x, abs_y)]
-
+        print "[error] no mapping for action"
         return "error"
 
     def reward(self, delta_me, delta, action):
@@ -215,7 +222,9 @@ class Robot:
         self.game = game
 
         # Explore
-        if random.randomint(0, 3) < 1:
+        if random.randint(0, 3) < 1:
+            print("[Bot " + str(self.robot_id) + "] random action")
+            # print self.state
             self.action = self.get_random_action()
         else:
             self.action = self.qlearning.predict(self.state)
@@ -232,15 +241,16 @@ class Robot:
         return count
 
     def get_possible_actions(self):
-        possible_moves = []
+        possible_moves = [ACTION_SUICIDE]
         for move in MOVE_DIRECTIONS:
-            if self.state.fields(move).type != FIELD_OBSTACLE:
-                possible_moves.append(move)
+            if self.state.fields[move].type != FIELD_OBSTACLE:
+                possible_moves.append((ACTION_MOVE, move))
+                possible_moves.append((ACTION_ATTACK, move))
         return possible_moves
 
     def get_random_action(self):
         possible_action = self.get_possible_actions()
-        return possible_action[random.randint(0, len(possible_action))]
+        return possible_action[random.randint(0, len(possible_action)-1)]
 
     # delta = [AttrDict{
     #    'loc': loc,
@@ -253,6 +263,8 @@ class Robot:
 
     def delta_callback(self, delta, new_gamestate):
         future_game = new_gamestate.get_game_info(self.player_id)
+        print "delta_callback calle"
+        print("Size of Q: " + len())
         for (loc, robot) in self.game.robots:
             action = self.last[robot.robot_id]['action']
 
