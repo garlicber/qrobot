@@ -1,28 +1,14 @@
 import random
-import rgkit.rg as rg
 from rgkit.run import Runner
-import _collections
 
-SIGHT = 3
-HP_LOW = 1
-HP_MEDIUM = 2
-HP_HIGH = 3
-HP_ALL = [HP_LOW, HP_MEDIUM, HP_HIGH]
+from q_learning import QLearning
+from state import State
+import state as s
 
-FIELD_NORMAL = 1 << 1
-FIELD_FRIEND = 1 << 2
-FIELD_SPAWN = 1 << 3
-FIELD_ENEMY = 1 << 4
-FIELD_OBSTACLE = 1 << 5
-
-ACTION_SUICIDE = 1
-ACTION_MOVE = 2
-ACTION_ATTACK = 3
-
-MOVE_DIRECTIONS = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
 def add_tuple(a, b):
     return map(sum, zip(a, b))
+
 
 class Robot:
     game = None
@@ -51,7 +37,8 @@ class Robot:
         new_robot = self.robot_id in self.robot_ids
         self.robot_ids.add(self.robot_id)
 
-        self.current_state = State.from_game(self.location, self.hp, game)
+        self.current_state = State.from_game(game, self.location,
+                                             self.player_id)
         self.game = game
 
         # Explore
@@ -71,11 +58,11 @@ class Robot:
         return State.map_action(action, self.location)
 
     def get_possible_actions(self):
-        possible_moves = [ACTION_SUICIDE]
-        for move in MOVE_DIRECTIONS:
-            if self.state.fields[move].type != FIELD_OBSTACLE:
-                possible_moves.append((ACTION_MOVE, move))
-                possible_moves.append((ACTION_ATTACK, move))
+        possible_moves = [s.ACTION_SUICIDE]
+        for move in s.MOVE_DIRECTIONS:
+            if self.state.fields[move].type != s.FIELD_OBSTACLE:
+                possible_moves.append((s.ACTION_MOVE, move))
+                possible_moves.append((s.ACTION_ATTACK, move))
         return possible_moves
 
     def get_random_action(self):
@@ -110,9 +97,9 @@ class Robot:
 
             for delta_me in delta:
                 if delta_me['loc'] == loc:
-                    future_state = State.from_game(delta_me.loc_end,
-                                                   delta_me.hp_end,
-                                                   future_game)
+                    future_state = State.from_game(future_game,
+                                                   delta_me.loc_end,
+                                                   self.player_id)
                     self.qlearning.learn(delta_me, delta, self.state,
                                          future_state, action)
 
