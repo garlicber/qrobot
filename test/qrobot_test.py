@@ -4,10 +4,14 @@ from rgkit.settings import AttrDict
 import rgkit.rg as rg
 
 import qrobot as q
-from qrobot import QLearning, Robot, ACTION_MOVE, ACTION_ATTACK, ACTION_SUICIDE
+
+from q_learning import QLearning
+from qrobot import Robot
+from state import ACTION_SUICIDE
 
 
 class TestQRobot(unittest.TestCase):
+    @unittest.skip
     def smoke_test_robot(self):
         robot1 = q.Robot()
         robot2 = q.Robot()
@@ -29,6 +33,13 @@ class TestQRobot(unittest.TestCase):
 
 
 class TestQLearning(unittest.TestCase):
+
+    @staticmethod
+    def empty_state():
+        robot_loc = (0, 0)
+        fields = ()
+        return q.State(robot_loc, fields)
+
     def setUp(self):
         # needed to initialize global settings
         Runner.from_robots(Robot(), Robot())
@@ -41,9 +52,9 @@ class TestQLearning(unittest.TestCase):
 
     def test_learning(self):
         qlearning = QLearning()
-        old_state = q.State.empty_state()
+        old_state = self.empty_state()
         action = ACTION_SUICIDE
-        new_state = q.State.empty_state()
+        new_state = self.empty_state()
         reward = 10
         old_reward = qlearning.get_q(old_state, action)
         qlearning.learn(old_state, new_state, action, reward)
