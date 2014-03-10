@@ -16,18 +16,33 @@ MOVE_DIRECTIONS = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
 
 class State:
-    TOTAL_FIELDS = 254
     OFFSET = settings.robot_hp / 5
     MAX_HP = OFFSET + settings.robot_hp
 
     # number of block fields on the map for left
-    MAP_LEFT_OFFSETS = [6, 4, 2, 2, 1, 1, 0, 0, 0, 0, 0, 1, 1, 2, 2, 4, 6]
+    MAP_LEFT_OFFSETS = [6, 4, 2, 2, 1, 1, 0, 0, 0,
+                        0, 0, 1, 1, 2, 2, 4, 6]
+    assert len(MAP_LEFT_OFFSETS) == 17
+
     MAP_MAX_X = 17
     MAP_MAX_Y = MAP_MAX_X
-    MAP_X_OFFSETS = [MAP_MAX_X - 2*MAP_LEFT_OFFSETS[xi]
-                     for xi in range(len(MAP_LEFT_OFFSETS))]
+
+    MAP_X_TO_FIELDS = []
+    # integral over all x offsets
+    for x in xrange(MAP_MAX_X + 1):
+        if x == 0:
+            line_before = 0
+            this_line = 0
+        else:
+            line_before = MAP_X_TO_FIELDS[x-1]
+            this_line = MAP_MAX_X - 2*MAP_LEFT_OFFSETS[x - 1]
+        MAP_X_TO_FIELDS.append(this_line + line_before)
 
     MAP_RIGHT_OFFSETS = [MAP_MAX_X - left for left in MAP_LEFT_OFFSETS]
+
+    TOTAL_FIELDS = MAP_X_TO_FIELDS[-1] + MAP_MAX_Y - MAP_LEFT_OFFSETS[-1] -\
+        MAP_RIGHT_OFFSETS[-1]
+    assert TOTAL_FIELDS == 225
 
     ENEMY = 1
     FRIEND = -1
@@ -52,7 +67,7 @@ class State:
     @staticmethod
     def _loc_to_field_i(loc):
         x, y = loc
-        return State.MAP_X_OFFSETS[x - 1] + y
+        return State.MAP_X_TO_FIELDS[x-1] + y - State.MAP_LEFT_OFFSETS[x-1]
 
     def field(self, loc):
         return self.fields[self._loc_to_field_i(loc)]
