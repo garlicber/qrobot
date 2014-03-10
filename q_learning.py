@@ -2,7 +2,8 @@ import state as s
 
 REWARD_UNIT = 1
 
-class QLarning:
+
+class QLearning:
     DEFAULT_REWARD = 0
     q = {}
 
@@ -13,7 +14,6 @@ class QLarning:
         self.actions = self._actions()
         self._alpha = alpha
         self._gamma = gamma
-
 
     def __sizeof__(self):
         return len(self.q)
