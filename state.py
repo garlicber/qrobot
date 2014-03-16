@@ -68,7 +68,7 @@ class State:
     @staticmethod
     def _loc_to_field_i(loc):
         x, y = loc
-        return State.MAP_X_TO_FIELDS[x-1] + y - State.MAP_LEFT_OFFSETS[x-1]
+        return State.MAP_X_TO_FIELDS[x-1] + y - State.MAP_LEFT_OFFSETS[x-1] - 1
 
     def field(self, loc):
         return self.fields[self._loc_to_field_i(loc)]

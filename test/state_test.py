@@ -8,7 +8,7 @@ class TestState(unittest.TestCase):
         gstate = gamestate.GameState()
         friend_id = 1
         enemy_id = 2
-        friends = [(1, 8), (3, 3), (17, 9), (9, 1)]
+        friends = [(1, 8), (3, 3), (17, 9), (9, 1), (17, 11)]
         enemies = [(1, 9), (4, 3), (16, 9), (10, 1)]
         robots = friends + enemies
 
