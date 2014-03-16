@@ -27,7 +27,7 @@ class QLearning:
 
     def predict(self, state):
         #print state
-        action = max(self.actions, key=lambda a: self.get_q(state, a))
+        action = max(self.actions, key=lambda a: self.q.get_q(state, a))
         return action
 
     def learn(self, state, new_state, action, reward):
@@ -50,11 +50,6 @@ class QLearning:
             return ["move", (abs_x, abs_y)]
         print "[error] no mapping for action"
         return "error"
-
-    def map_location(self, absolute_loc, relative_loc):
-        (rel_x, rel_y) = relative_loc
-        (abs_x, abs_y) = absolute_loc
-        return rel_x + abs_x, rel_y + abs_y
 
     def __eq__(self, other):
         return (self.q == other.q and
