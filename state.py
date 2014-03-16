@@ -1,3 +1,4 @@
+import rgkit.rg as rg
 from rgkit.settings import settings
 
 import q_learning
@@ -96,11 +97,10 @@ class State:
     def map_action(action, loc):
         if action == ACTION_SUICIDE:
             return ["suicide"]
-        (action_code, rel) = action
-        (abs_x, abs_y) = q_learning.QLearning.map_location(loc, rel)
+        (action_code, loc) = action
         if action_code == ACTION_ATTACK:
-            return ["attack", (abs_x, abs_y)]
+            return ["attack", loc]
         if action_code == ACTION_MOVE:
-            return ["move", (abs_x, abs_y)]
+            return ["move", loc]
 
         return "error"
