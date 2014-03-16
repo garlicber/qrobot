@@ -1,10 +1,14 @@
+import collections
+
 
 class Q_hash:
+    hash_matrix = {}
+
     def __init__(self):
-        pass
+        self.hash_matrix = collections.defaultdict(float)
 
     def set_q(self, state, action, new_q):
-        pass
+        self.hash_matrix[(state, action)] = new_q
 
     def get_q(self, state, action):
-        pass
+        return self.hash_matrix[(state, action)]
