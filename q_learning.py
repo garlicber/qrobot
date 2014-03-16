@@ -45,7 +45,7 @@ class QLearning:
         assert len(action) > 0
         if len(action) == 1:
             return action
-        return action[random.randint(0,len(action))]
+        return action[random.randint(0, len(action))]
 
     def learn(self, state, new_state, action, reward):
         old_q = self.q.get_q(state, action)

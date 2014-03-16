@@ -4,7 +4,7 @@ import rg
 class Robot():
     def __init__(self):
         self.counter = 0
-        self.q =Q_hash()
+        self.q = Q_hash()
 
     def act(self, game):
         close_enemy = self.enemy_close(game)
