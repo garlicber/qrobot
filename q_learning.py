@@ -34,18 +34,18 @@ class QLearning:
 
     def find_best_action(self, state):
         max_q = -sys.maxint - 1
-        action = []
+        action_list = []
         for action in self.actions:
             current_q = self.q.get_q(state, a)
             if max_q == current_q:
-                action.append(action)
+                action_list.append(action)
             elif max_q < current_q:
-                action = [action]
+                action_list = [action]
                 max_q = current_q
-        assert len(action) > 0
-        if len(action) == 1:
+        assert len(action_list) > 0
+        if len(action_list) == 1:
             return action
-        return action[random.randint(0, len(action))]
+        return random.choice(action_list)
 
     def learn(self, state, new_state, action, reward):
         old_q = self.q.get_q(state, action)
