@@ -1,3 +1,5 @@
+import random
+import sys
 import state as s
 import q_hash
 
@@ -29,6 +31,21 @@ class QLearning:
         #print state
         action = max(self.actions, key=lambda a: self.q.get_q(state, a))
         return action
+
+    def find_best_action(self, state):
+        max_q = -sys.maxint - 1
+        action_list = []
+        for action in self.actions:
+            current_q = self.q.get_q(state, a)
+            if max_q == current_q:
+                action_list.append(action)
+            elif max_q < current_q:
+                action_list = [action]
+                max_q = current_q
+        assert len(action_list) > 0
+        if len(action_list) == 1:
+            return action
+        return random.choice(action_list)
 
     def learn(self, state, new_state, action, reward):
         old_q = self.q.get_q(state, action)
