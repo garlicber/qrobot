@@ -4,7 +4,6 @@ import q_hash
 
 class QLearning:
     DEFAULT_REWARD = 0
-    q = q_hash.Q_hash()
 
     _alpha = 0.5
     _gamma = 0.5
@@ -13,6 +12,7 @@ class QLearning:
         self.actions = self._actions()
         self._alpha = alpha
         self._gamma = gamma
+        self.q = q_hash.Q_hash()
 
     def __sizeof__(self):
         return len(self.q)

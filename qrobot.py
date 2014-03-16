@@ -18,7 +18,6 @@ class Robot:
     last_states = {}
     last_action = {}
 
-    qlearning = QLearning()
     delta = None
 
     # Keep track of all our robot_ids. Will be useful to detect new robots.
@@ -31,7 +30,7 @@ class Robot:
     robot_id = 0
 
     def __init__(self):
-        pass
+        self.qlearning = QLearning()
 
     def act(self, game):
         new_robot = self.robot_id in self.robot_ids
