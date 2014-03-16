@@ -11,7 +11,7 @@ from state import ACTION_SUICIDE
 
 
 class TestQRobot(unittest.TestCase):
-    @unittest.skip
+
     def smoke_test_robot(self):
         robot1 = q.Robot()
         robot2 = q.Robot()
@@ -20,7 +20,6 @@ class TestQRobot(unittest.TestCase):
         scores = runner.run()
         assert type(scores) is list
 
-    @unittest.skip
     def test_robot(self):
         training_robot = Robot()
         robot2 = Robot()
@@ -29,7 +28,7 @@ class TestQRobot(unittest.TestCase):
                                     delta_callback=delta)
         runner.run()
 
-        assert training_robot.qlearning.q != robot2.qlearning.q
+        self.assertNotEqual(training_robot.qlearning.q, robot2.qlearning.q)
 
 
 class TestQLearning(unittest.TestCase):
