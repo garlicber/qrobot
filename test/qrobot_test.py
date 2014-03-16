@@ -56,6 +56,6 @@ class TestQLearning(unittest.TestCase):
         action = ACTION_SUICIDE
         new_state = self.empty_state()
         reward = 10
-        old_reward = qlearning.get_q(old_state, action)
+        old_reward = qlearning.q.get_q(old_state, action)
         qlearning.learn(old_state, new_state, action, reward)
-        self.assertGreater(qlearning.get_q(old_state, action), old_reward)
+        self.assertGreater(qlearning.q.get_q(old_state, action), old_reward)

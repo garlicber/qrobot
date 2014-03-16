@@ -41,7 +41,7 @@ class Robot:
                                              self.player_id)
         self.game = game
 
-        # Explore
+        # Explore function
         if random.randint(0, 3) < 1:
             print("[Bot " + str(self.robot_id) + "] random action")
             # print self.state
@@ -77,16 +77,20 @@ class Robot:
     #    'hp_end': hp_end
     # }]
     # returns new GameState
+
     def learn(self):
         my_delta = [d for d in self.delta if d.loc == self.location]
-
-        damage_taken = my_delta.hp - my_delta.hp_end
-        reward = my_delta.damage_caused - damage_taken
-
         last_state = self.last_states[self.robot_id]
         action = self.last_action[self.robot_id]
         future_state = self.current_state
+        reward = self.reward(my_delta)
         self.qlearning.learn(last_state, future_state, action, reward)
+
+    def reward(self, my_delta):
+        damage_taken = my_delta.hp - my_delta.hp_end
+        print damage_taken
+        reward = my_delta.damage_caused - damage_taken
+        return reward
 
     def delta_callback(self, delta, new_gamestate):
         future_game = new_gamestate.get_game_info(self.player_id)
