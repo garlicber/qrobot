@@ -4,7 +4,6 @@ import q_hash
 
 class QLearning:
     DEFAULT_REWARD = 0
-    q = q_hash.Q_hash()
 
     _alpha = 0.5
     _gamma = 0.5
@@ -13,6 +12,7 @@ class QLearning:
         self.actions = self._actions()
         self._alpha = alpha
         self._gamma = gamma
+        self.q = q_hash.Q_hash()
 
     def __sizeof__(self):
         return len(self.q)
@@ -27,7 +27,7 @@ class QLearning:
 
     def predict(self, state):
         #print state
-        action = max(self.actions, key=lambda a: self.get_q(state, a))
+        action = max(self.actions, key=lambda a: self.q.get_q(state, a))
         return action
 
     def learn(self, state, new_state, action, reward):
@@ -50,11 +50,6 @@ class QLearning:
             return ["move", (abs_x, abs_y)]
         print "[error] no mapping for action"
         return "error"
-
-    def map_location(self, absolute_loc, relative_loc):
-        (rel_x, rel_y) = relative_loc
-        (abs_x, abs_y) = absolute_loc
-        return rel_x + abs_x, rel_y + abs_y
 
     def __eq__(self, other):
         return (self.q == other.q and

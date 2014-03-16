@@ -1,5 +1,6 @@
 import random
 from rgkit.run import Runner
+import rgkit.rg as rg
 
 from q_learning import QLearning
 from state import State
@@ -18,7 +19,6 @@ class Robot:
     last_states = {}
     last_action = {}
 
-    qlearning = QLearning()
     delta = None
 
     # Keep track of all our robot_ids. Will be useful to detect new robots.
@@ -31,7 +31,7 @@ class Robot:
     robot_id = 0
 
     def __init__(self):
-        pass
+        self.qlearning = QLearning()
 
     def act(self, game):
         new_robot = self.robot_id in self.robot_ids
@@ -45,12 +45,9 @@ class Robot:
         if random.randint(0, 3) < 1:
             print("[Bot " + str(self.robot_id) + "] random action")
             # print self.state
-            self.action = self.get_random_action()
+            action = self.get_random_action()
         else:
             action = self.qlearning.predict(self.current_state)
-
-        if not new_robot:
-            self.learn()
 
         self.last_states[self.robot_id] = self.current_state
         self.last_action[self.robot_id] = action
@@ -59,10 +56,11 @@ class Robot:
 
     def get_possible_actions(self):
         possible_moves = [s.ACTION_SUICIDE]
-        for move in s.MOVE_DIRECTIONS:
-            if self.state.fields[move].type != s.FIELD_OBSTACLE:
-                possible_moves.append((s.ACTION_MOVE, move))
-                possible_moves.append((s.ACTION_ATTACK, move))
+        possible_locs = rg.locs_around(self.location,
+                                       filter_out=('invalid', 'obstacle'))
+        for loc in possible_locs:
+            possible_moves.append((s.ACTION_MOVE, loc))
+            possible_moves.append((s.ACTION_ATTACK, loc))
         return possible_moves
 
     def get_random_action(self):
@@ -89,23 +87,27 @@ class Robot:
     def reward(self, my_delta):
         damage_taken = my_delta.hp - my_delta.hp_end
         print damage_taken
+        if not hasattr(my_delta, 'damage_caused'):
+            pass
         reward = my_delta.damage_caused - damage_taken
         return reward
 
     def delta_callback(self, delta, new_gamestate):
         future_game = new_gamestate.get_game_info(self.player_id)
         print "delta_callback calle"
-        print("Size of Q: " + len())
-        for (loc, robot) in self.game.robots:
-            action = self.last[robot.robot_id]['action']
+        print("Size of Q: " + str(len(self.qlearning.q.hash_matrix)))
+        for (robot_loc, robot) in self.game.robots.items():
+            if hasattr(robot, 'robot_id') and robot.robot_id in self.robot_ids:
+                action = self.last_action[robot.robot_id]
 
-            for delta_me in delta:
-                if delta_me['loc'] == loc:
-                    future_state = State.from_game(future_game,
-                                                   delta_me.loc_end,
-                                                   self.player_id)
-                    self.qlearning.learn(delta_me, delta, self.state,
-                                         future_state, action)
+                for delta_me in delta:
+                    if delta_me['loc'] == robot_loc:
+                        future_state = State.from_game(future_game,
+                                                       delta_me.loc_end,
+                                                       self.player_id)
+                        reward = self.reward(delta_me)
+                        self.qlearning.learn(self.current_state, future_state,
+                                             action, reward)
 
 
 if __name__ == "__main__":

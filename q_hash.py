@@ -12,3 +12,7 @@ class Q_hash:
 
     def get_q(self, state, action):
         return self.hash_matrix[(state, action)]
+
+    def __eq__(self, other):
+        return (self.hash_matrix == other.hash_matrix and
+                len(self.hash_matrix) == len(other.hash_matrix))
