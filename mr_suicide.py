@@ -1,13 +1,17 @@
 import rg
 
 
-class Robot:
+class Robot():
     def __init__(self):
         self.counter = 0
+        self.q =Q_hash()
 
     def act(self, game):
         close_enemy = self.enemy_close(game)
         self.counter += 1
+        hash_value = self.q.get_q('a', '1')
+        self.q.set_q('a', '1', hash_value + 1)
+        print self.q.get_q('a', '1')
         print(self.counter)
 
         if self.suicide_reason():
@@ -49,3 +53,16 @@ class Robot:
             return True
         else:
             return False
+
+
+class Q_hash:
+    hash_matrix = {}
+
+    def __init__(self):
+        self.hash_matrix = collections.defaultdict(float)
+
+    def set_q(self, state, action, new_q):
+        self.hash_matrix[(state, action)] = new_q
+
+    def get_q(self, state, action):
+        return self.hash_matrix[(state, action)]
