@@ -5,5 +5,5 @@ if [ ! -d ".env" ];then
 fi
 
 source .env/bin/activate
-
-pip install -r requirements.txt
+pip2 install numpy==1.8.0
+pip install --upgrade -r requirements.txt
