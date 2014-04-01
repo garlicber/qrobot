@@ -1,3 +1,6 @@
+before_install:
+  -sudo apt-get install gfortran
+
 language: python
 python:
   - "2.7"
