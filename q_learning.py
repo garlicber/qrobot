@@ -56,7 +56,7 @@ class QLearning:
         self.q.set_q(state, action, q)
 
     @staticmethod
-    def map_action(action, loc):
+    def from_hashable_action(action, loc):
         if action == s.ACTION_SUICIDE:
             return ["suicide"]
 
@@ -67,6 +67,18 @@ class QLearning:
             return ["move", (abs_x, abs_y)]
         print "[error] no mapping for action"
         return "error"
+
+    @staticmethod
+    def to_hashable_action(action):
+        tpe = action[0]
+        if tpe == "suicide":
+            return s.ACTION_SUICIDE
+        elif tpe == "guard":
+            return s.ACTION_GUARD
+        elif tpe == "attack":
+            return s.ACTION_ATTACK, action[1]
+        elif tpe == "move":
+            return s.ACTION_MOVE, action[1]
 
     def __eq__(self, other):
         return (self.q == other.q and

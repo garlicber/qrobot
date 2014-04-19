@@ -1,6 +1,5 @@
 before_install:
-  - sudo apt-get install gfortran
-
+  - sudo apt-get install gfortran libblas-dev libblas3gf liblapack-dev liblapack3gf
 language: python
 python:
   - "2.7"

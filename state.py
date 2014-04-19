@@ -12,6 +12,7 @@ FIELD_OBSTACLE = 1 << 5
 ACTION_SUICIDE = 1
 ACTION_MOVE = 2
 ACTION_ATTACK = 3
+ACTION_GUARD = 4
 
 MOVE_DIRECTIONS = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
@@ -53,7 +54,7 @@ class State:
         self.fields = fields
 
     @staticmethod
-    def from_game(game, robot_loc, my_player_id):
+    def from_game(game, my_player_id, robot_loc=(9, 9)):
         # my_player
         fields = [0] * State.TOTAL_FIELDS
         for loc, robot in game.robots.items():
