@@ -3,4 +3,4 @@ pep8==1.4.6
 networkx==1.8.1
 ffnet==0.7.1
 scipy==0.13.3
-git+https://github.com/berleon/rgkit.git
+git+https://github.com/berleon/rgkit.git@actions

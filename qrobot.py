@@ -1,4 +1,5 @@
 import random
+import copy
 from rgkit.run import Runner
 import rgkit.rg as rg
 
@@ -37,8 +38,8 @@ class Robot:
         new_robot = self.robot_id in self.robot_ids
         self.robot_ids.add(self.robot_id)
 
-        self.current_state = State.from_game(game, self.location,
-                                             self.player_id)
+        self.current_state = State.from_game(game, self.player_id,
+                                             robot_loc=self.location)
         self.game = game
 
         # Explore function
@@ -65,7 +66,7 @@ class Robot:
 
     def get_random_action(self):
         possible_action = self.get_possible_actions()
-        return possible_action[random.randint(0, len(possible_action)-1)]
+        return random.choice(possible_action)
 
     # delta = [AttrDict{
     #    'loc': loc,
@@ -84,15 +85,13 @@ class Robot:
         reward = self.reward(my_delta)
         self.qlearning.learn(last_state, future_state, action, reward)
 
-    def reward(self, my_delta):
+    @staticmethod
+    def reward(my_delta):
         damage_taken = my_delta.hp - my_delta.hp_end
-        print damage_taken
-        if not hasattr(my_delta, 'damage_caused'):
-            pass
         reward = my_delta.damage_caused - damage_taken
         return reward
 
-    def delta_callback(self, delta, new_gamestate):
+    def delta_callback(self, delta, actions, new_gamestate):
         future_game = new_gamestate.get_game_info(self.player_id)
         print "delta_callback calle"
         print("Size of Q: " + str(len(self.qlearning.q.hash_matrix)))
@@ -101,10 +100,11 @@ class Robot:
                 action = self.last_action[robot.robot_id]
 
                 for delta_me in delta:
+                    state_template = State.from_game(future_game,
+                                                     self.player_id)
                     if delta_me['loc'] == robot_loc:
-                        future_state = State.from_game(future_game,
-                                                       delta_me.loc_end,
-                                                       self.player_id)
+                        future_state = copy.deepcopy(state_template)
+                        future_state.robot_loc = delta_me.loc_end
                         reward = self.reward(delta_me)
                         self.qlearning.learn(self.current_state, future_state,
                                              action, reward)

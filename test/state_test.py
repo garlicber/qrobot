@@ -18,7 +18,7 @@ class TestState(unittest.TestCase):
             gstate.add_robot(e_loc, enemy_id)
 
         game = gstate.get_game_info(friend_id)
-        s = State.from_game(game, friends[0], friend_id)
+        s = State.from_game(game, friend_id)
 
         for f_loc in friends:
             self.assertEqual(s.field(f_loc), State.FRIEND)
